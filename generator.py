@@ -3,7 +3,7 @@ from torch import nn
 from conditioningstack import conditioningStack
 from lcstack import LCStack
 from outputstack import outputStack
-
+from convgru import ConvGRU
 
 class generator(nn.Module):
     def __init__(self, input_channel):
