@@ -1,6 +1,7 @@
 import torch
 from torch import nn
-
+from norms import l2normalize
+from torch.nn import Parameter
 
 class SpectralNorm(nn.Module):
     def __init__(self, module, name='weight', power_iterations=1):
