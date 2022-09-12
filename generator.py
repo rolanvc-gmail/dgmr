@@ -5,9 +5,10 @@ from lcstack import LCStack
 from outputstack import outputStack
 from convgru import ConvGRU
 
-class generator(nn.Module):
+
+class Generator(nn.Module):
     def __init__(self, input_channel):
-        super(generator, self).__init__()
+        super(Generator, self).__init__()
         self.conditioningStack = conditioningStack(input_channel)
         self.LCStack = LCStack()
         self.ConvGRU = ConvGRU(x_dim=[768, 384, 192, 96],
@@ -17,21 +18,21 @@ class generator(nn.Module):
                                gb_hidden_size=[384, 192, 96, 48])
         self.outputStack = outputStack()
 
-    def forward(self, CD_input, LCS_input):
-        CD_input = torch.unsqueeze(CD_input, 2)
-        LCS_output = self.LCStack(LCS_input)
-        CD_output = self.conditioningStack(CD_input)
-        CD_output.reverse()  # to make the largest first
-        LCS_output = torch.unsqueeze(LCS_output, 1)
-        LCS_outputs = [LCS_output] * 18
+    def forward(self, cd_input, lcs_input):
+        cd_input = torch.unsqueeze(cd_input, 2)
+        lcs_output = self.LCStack(lcs_input)
+        cd_output = self.conditioningStack(cd_input)
+        cd_output.reverse()  # to make the largest first
+        lcs_output = torch.unsqueeze(lcs_output, 1)
+        lcs_outputs = [lcs_output] * 18
 
-        for i in range(len(LCS_outputs)):
+        for i in range(len(lcs_outputs)):
             if i == 0:
-                LCS_outputs_data = LCS_outputs[i]
+                lcs_outputs_data = lcs_outputs[i]
             else:
-                LCS_outputs_data = torch.cat((LCS_outputs_data, LCS_outputs[i]), 1)  # create list of Z from latent conditioning stack
+                lcs_outputs_data = torch.cat((lcs_outputs_data, lcs_outputs[i]), 1)  # create list of Z from latent conditioning stack
 
-        gru_output = self.ConvGRU(LCS_outputs_data, CD_output)
+        gru_output = self.ConvGRU(lcs_outputs_data, cd_output)
 
         for i in range(gru_output.shape[1]):
             out = gru_output[:, i]
