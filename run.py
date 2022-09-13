@@ -6,7 +6,7 @@ import os
 from norms import Norm_1_torch
 from spatialdiscriminator import spaDiscriminator
 from temporaldiscriminator import temDiscriminator
-from generator import generator
+from generator import Generator
 import glob as glob
 import matplotlib.pyplot as plt
 import matplotlib
@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     sd = spaDiscriminator()
     td = temDiscriminator()
-    g = generator(24)
+    g = Generator(24)
     sig = nn.Sigmoid()
     
     if torch.cuda.is_available():
