@@ -218,7 +218,7 @@ if __name__ == "__main__":
                 cbar = fig.colorbar(sm)
                 cbar.ax.set_title("dbz")
                 ax.imshow(gg, cmap='jet', vmin=vmin, vmax=vmax)
-                plt.savefig('fake_' + str(i) + '.png')
+                plt.savefig('fake/fake_' + str(i) + '.png')
 
         g_optimizer.zero_grad()
         g_loss_sum.backward()
