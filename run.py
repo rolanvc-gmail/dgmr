@@ -11,7 +11,7 @@ import glob as glob
 import matplotlib.pyplot as plt
 import matplotlib
 import random
-
+import sys
 cuda = True if torch.cuda.is_available() else False
 os.environ["CUDA_VISIBLE_DEVICES"] = '2'
 
@@ -122,8 +122,17 @@ if __name__ == "__main__":
     # g_optimizer = torch.optim.RMSprop(g.parameters(), lr=0.000001, alpha=0.99, eps=1e-08, weight_decay=0, momentum=0, centered=False)
     real_label = Variable(torch.ones(BATCHSIZE)).cuda()
     fake_label = Variable(torch.zeros(BATCHSIZE)).cuda()
-    
-    for e in range(5000000):
+
+    filename = "./counter.txt"
+    if os.path.isfile(filename):
+        iter_file = open(filename, "rb")
+        start = int.from_bytes(iter_file.read(), sys.byteorder)
+    else:
+        start = 0
+
+    for e in range(start, 5000000):
+        iter_file = open("counter.txt", "wb", 0)
+        iter_file.write(e.to_bytes(4, byteorder=sys.byteorder))
         print("iteration " + str(e))
         
         for j in range(2):
