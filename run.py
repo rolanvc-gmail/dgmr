@@ -13,8 +13,9 @@ import matplotlib
 import random
 import sys
 cuda = True if torch.cuda.is_available() else False
-os.environ["CUDA_VISIBLE_DEVICES"] = '2'
-
+os.environ["CUDA_VISIBLE_DEVICES"] = '1,2'
+device=1
+torch.cuda.device(device)
 
 BATCHSIZE = 16
 REP = 4
@@ -93,9 +94,9 @@ if __name__ == "__main__":
     sig = nn.Sigmoid()
     
     if torch.cuda.is_available():
-        sd = sd.cuda()
-        td = td.cuda()
-        g = g.cuda()
+        sd = sd.cuda(device)
+        td = td.cuda(device)
+        g = g.cuda(device)
 
     if not os.path.exists('./model'):
         os.makedirs('./model')
@@ -120,8 +121,8 @@ if __name__ == "__main__":
     # sd_optimizer = torch.optim.RMSprop(sd.parameters(), lr=0.000001, alpha=0.99, eps=1e-08, weight_decay=0, momentum=0, centered=False)
     # td_optimizer = torch.optim.RMSprop(td.parameters(), lr=0.000001, alpha=0.99, eps=1e-08, weight_decay=0, momentum=0, centered=False)
     # g_optimizer = torch.optim.RMSprop(g.parameters(), lr=0.000001, alpha=0.99, eps=1e-08, weight_decay=0, momentum=0, centered=False)
-    real_label = Variable(torch.ones(BATCHSIZE)).cuda()
-    fake_label = Variable(torch.zeros(BATCHSIZE)).cuda()
+    real_label = Variable(torch.ones(BATCHSIZE)).cuda(device)
+    fake_label = Variable(torch.zeros(BATCHSIZE)).cuda(device)
 
     filename = "./counter.txt"
     if os.path.isfile(filename):
@@ -140,17 +141,16 @@ if __name__ == "__main__":
 
             # train discriminators on real inputs
             data = create_dummy_real_sequence()  # FETCH DATA HERE
-            input_real_1sthalf = Variable(torch.from_numpy(data[:, :4])).cuda()  # 2 x 4 x 256 x 256 x 1 (for generator)
-            input_real_2ndhalf = Variable(torch.from_numpy(data[:, 4:])).cuda()  # 2 x 18 x 256 x 256 x 1 (for spatial discriminator)
-            input_real_whole = Variable(torch.from_numpy(data)).cuda()  # 2 x 22 x 256 x 256 x 1 (for temporal discriminator)
+            input_real_1sthalf = Variable(torch.from_numpy(data[:, :4])).cuda(device=device)  # 2 x 4 x 256 x 256 x 1 (for generator)
+            input_real_2ndhalf = Variable(torch.from_numpy(data[:, 4:])).cuda(device=device)  # 2 x 18 x 256 x 256 x 1 (for spatial discriminator)
+            input_real_whole = Variable(torch.from_numpy(data)).cuda(device=device)  # 2 x 22 x 256 x 256 x 1 (for temporal discriminator)
             input_real_2ndhalf_sd = input_real_2ndhalf[:, S]
             sd_pred_real = sd(input_real_2ndhalf_sd)  # output of spatial discriminator for real lead times x 18
             td_pred_real = td(input_real_whole)  # output of temporal discriminator for entire sequence x 22
 
             # train discriminators on fake inputs
-            z = Variable(Tensor(np.random.normal(0, 1, (BATCHSIZE, 8, 8, 8))))  # latent variable input for latent conditioning stack
+            z = Variable(Tensor(np.random.normal(0, 1, (BATCHSIZE, 8, 8, 8)))).cuda(device=device)  # latent variable input for latent conditioning stack
             fake_img = g(input_real_1sthalf, z).detach()  # fake output of generator x 18
-            print("shape of generator output is: {}".format(fake_img.shape))
             fake_img_2ndhalf_sd = fake_img[:, S]  # get input to spatial discriminator from fake images
             sd_pred_fake = sd(fake_img_2ndhalf_sd)
             fake_img_whole_td = torch.cat((input_real_1sthalf, fake_img), dim=1)  # create input to temporal discriminator from fake images
@@ -185,9 +185,9 @@ if __name__ == "__main__":
         # train generator
         data = create_dummy_real_sequence_for_gen()
         
-        input_real_1sthalf = Variable(torch.from_numpy(data[:, :4])).cuda()  # 2 x 4 x 256 x 256 x 1 (for generator)
-        input_real_2ndhalf = Variable(torch.from_numpy(data[:, 4:])).cuda()  # 2 x 18 x 256 x 256 x 1 (for generator true values)
-        z = Variable(Tensor(np.random.normal(0, 1, (BATCHSIZE, 8, 8, 8))))
+        input_real_1sthalf = Variable(torch.from_numpy(data[:, :4])).cuda(device)  # 2 x 4 x 256 x 256 x 1 (for generator)
+        input_real_2ndhalf = Variable(torch.from_numpy(data[:, 4:])).cuda(device)  # 2 x 18 x 256 x 256 x 1 (for generator true values)
+        z = Variable(Tensor(np.random.normal(0, 1, (BATCHSIZE, 8, 8, 8)))).cuda(device)
         g_output = g(input_real_1sthalf, z)  # input is real stack of 4 images
  
         fake_img_2ndhalf_sd_g = g_output[:, S]
